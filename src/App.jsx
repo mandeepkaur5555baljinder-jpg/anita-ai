@@ -106,6 +106,7 @@ export default function App() {
       // Set the app height to the actual visible viewport height
       const h = vv.height;
       document.documentElement.style.setProperty('--vvh', `${h}px`);
+      window.scrollTo(0, 0);
     };
 
     update();
@@ -135,8 +136,10 @@ export default function App() {
       // Only count mostly-horizontal swipes (dx > 50px, vertical drift < 60px)
       if (Math.abs(dx) > 50 && dy < 60) {
         if (dx > 0) {
-          // Swipe RIGHT → open sidebar
-          setSidebarCollapsed(false);
+          // Swipe RIGHT → open sidebar (ONLY if swipe started near the left edge!)
+          if (touchStartX.current < 50) {
+            setSidebarCollapsed(false);
+          }
         } else {
           // Swipe LEFT → close sidebar
           setSidebarCollapsed(true);
