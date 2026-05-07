@@ -65,20 +65,56 @@ const ChatInput = ({ chipText, clearChip }) => {
     setStreaming(true, aiId);
 
     try {
-      const { text: reply, provider: resolvedProvider } = await askAI(prompt, provider, history);
+      const lower = prompt.toLowerCase();
+      let reply = '';
+      let resolvedProvider = 'System';
+      
+      // Game Interceptors
+      if (lower.includes('play snake') || lower.includes('snake game')) {
+        reply = '[GAME:SNAKE]';
+      } else if (lower.includes('play flappy') || lower.includes('flappy bird')) {
+        reply = '[GAME:FLAPPY]';
+      } else if (lower.includes('play chess') || lower.includes('chess game')) {
+        reply = '[GAME:CHESS]';
+      } else if (lower.includes('play ludo') || lower.includes('ludo game') || lower.includes('ludo')) {
+        reply = '[GAME:LUDO]';
+      } else if (lower.includes('play car') || lower.includes('car game') || lower.includes('traffic')) {
+        reply = '[GAME:CAR]';
+      } else {
+        const aiResponse = await askAI(prompt, provider, history);
+        reply = aiResponse.text;
+        resolvedProvider = aiResponse.provider;
+      }
+
+      let stoppedEarly = false;
+      let remainingText = '';
 
       for (let i = 0; i < reply.length; i++) {
-        if (!useChatStore.getState().isStreaming) break;
+        if (!useChatStore.getState().isStreaming) {
+          stoppedEarly = true;
+          remainingText = reply.substring(i);
+          break;
+        }
         appendChunk(convId, aiId, reply[i]);
         const delay = reply[i] === ' ' ? 18 : reply[i] === '\n' ? 35 : 10;
         await new Promise(r => setTimeout(r, delay));
       }
 
-      finaliseMsg(convId, aiId, resolvedProvider);
+      finaliseMsg(convId, aiId, resolvedProvider, stoppedEarly ? remainingText : null);
     } catch (err) {
-      appendChunk(convId, aiId, `⚠️ ${err.message}`);
+      let errorReply = "⚠️ Not connected to brain.";
+      for (let i = 0; i < errorReply.length; i++) {
+        if (!useChatStore.getState().isStreaming) break;
+        appendChunk(convId, aiId, errorReply[i]);
+        await new Promise(r => setTimeout(r, 20));
+      }
+      finaliseMsg(convId, aiId, 'System', null);
     } finally {
-      setStreaming(false);
+      // Only turn off streaming globally if we didn't deliberately stop early,
+      // or if another stream didn't just start.
+      if (useChatStore.getState().streamMsgId === aiId) {
+        setStreaming(false);
+      }
     }
   }, [text, isStreaming, activeId, provider, newConv, addMsg, appendChunk, finaliseMsg, setStreaming, setTitle]);
 

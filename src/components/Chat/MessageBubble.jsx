@@ -1,4 +1,18 @@
 import { memo } from 'react';
+import useChatStore from '../../store/useChatStore';
+import SnakeGame from '../Games/SnakeGame';
+import FlappyBird from '../Games/FlappyBird';
+import ChessGame from '../Games/ChessGame';
+import LudoGame from '../Games/LudoGame';
+import CarGame from '../Games/CarGame';
+
+/* ── Custom User Sparkle Icon ── */
+const UserSparkles = () => (
+  <svg viewBox="0 0 48 48" width="18" height="18" style={{ transform: 'translateY(-1px)' }}>
+    <path fill="#ffffff" d="M22 8c1.5 6 4.5 9 10.5 10.5-6 1.5-9 4.5-10.5 10.5-1.5-6-4.5-9-10.5-10.5C17.5 17 20.5 14 22 8z" />
+    <path fill="#ffffff" d="M33 26c1 3 2.5 4.5 5.5 5.5-3 1-4.5 2.5-5.5 5.5-1-3-2.5-4.5-5.5-5.5 3-1 4.5-2.5 5.5-5.5z" />
+  </svg>
+);
 
 /* ── Markdown formatter ── */
 const fmt = (text) => {
@@ -36,6 +50,12 @@ const fmtTime = (ts) => {
  * When done: render formatted markdown HTML.
  */
 const MessageContent = ({ text, active }) => {
+  if (text.includes('[GAME:SNAKE]')) return <SnakeGame />;
+  if (text.includes('[GAME:FLAPPY]')) return <FlappyBird />;
+  if (text.includes('[GAME:CHESS]')) return <ChessGame />;
+  if (text.includes('[GAME:LUDO]')) return <LudoGame />;
+  if (text.includes('[GAME:CAR]')) return <CarGame />;
+
   if (active) {
     return (
       <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
@@ -57,6 +77,40 @@ const Thinking = () => (
 const MessageBubble = memo(({ msg, isStreaming }) => {
   const isUser = msg.role === 'user';
   const isEmpty = !msg.content;
+  const hasRemaining = !!msg.remainingText;
+  
+  const handleContinue = async () => {
+    const store = useChatStore.getState();
+    const activeId = store.activeId;
+    
+    // Mark as streaming globally for this message
+    store.setStreaming(true, msg.id);
+    
+    const text = msg.remainingText;
+    // Clear remaining text so the button disappears
+    store.finaliseMsg(activeId, msg.id, msg.provider, null);
+
+    let stoppedEarly = false;
+    let newRemaining = '';
+    
+    for (let i = 0; i < text.length; i++) {
+      if (!useChatStore.getState().isStreaming) {
+        stoppedEarly = true;
+        newRemaining = text.substring(i);
+        break;
+      }
+      useChatStore.getState().appendChunk(activeId, msg.id, text[i]);
+      const delay = text[i] === ' ' ? 18 : text[i] === '\n' ? 35 : 10;
+      await new Promise(r => setTimeout(r, delay));
+    }
+
+    // Re-finalize with any new remaining text if stopped again
+    useChatStore.getState().finaliseMsg(activeId, msg.id, msg.provider, stoppedEarly ? newRemaining : null);
+    
+    if (useChatStore.getState().streamMsgId === msg.id) {
+      useChatStore.getState().setStreaming(false);
+    }
+  };
 
   return (
     <div className={`msg-row${isUser ? ' user' : ''}`}>
@@ -72,12 +126,19 @@ const MessageBubble = memo(({ msg, isStreaming }) => {
               ? <Thinking />
               : <MessageContent text={msg.content ?? ''} active={isStreaming} />
           }
+          {!isUser && hasRemaining && !isStreaming && (
+            <button className="continue-btn" onClick={handleContinue}>
+              Continue generating
+            </button>
+          )}
         </div>
         <div className="msg-time">{fmtTime(msg.ts)}{isUser && ' ✓✓'}</div>
       </div>
 
       {isUser && (
-        <div className="msg-avatar av-user">U</div>
+        <div className="msg-avatar av-user">
+          <UserSparkles />
+        </div>
       )}
     </div>
   );

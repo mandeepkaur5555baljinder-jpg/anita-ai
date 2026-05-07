@@ -20,27 +20,48 @@ const ChatIcon = () => (
   </svg>
 );
 
-const Sidebar = ({ collapsed, onSettingsOpen }) => {
+const Sidebar = ({ collapsed, onSettingsOpen, onClose }) => {
   const { conversations, activeId, newConv, selectConv, deleteConv } = useChatStore();
 
   const handleUserClick = () => {
     onSettingsOpen?.();
   };
 
+  const handleConvSelect = (id) => {
+    selectConv(id);
+    if (window.innerWidth <= 768) onClose?.(); // only auto-close on mobile
+  };
+
+  const handleNewChat = () => {
+    newConv();
+    if (window.innerWidth <= 768) onClose?.(); // only auto-close on mobile
+  };
+
   return (
     <aside className={`sidebar${collapsed ? ' collapsed' : ''}`}>
 
-      {/* Brand */}
+      {/* Brand row with close button */}
       <div className="sidebar-brand">
         <img src="/icon-192.png" alt="Anita" className="brand-icon-img" />
-        <div>
+        <div style={{ flex: 1 }}>
           <div className="brand-name">Anita</div>
           <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>Your AI companion</div>
         </div>
+        {/* ← Close button — slides sidebar away on mobile */}
+        <button
+          className="sidebar-close-btn"
+          onClick={onClose}
+          aria-label="Close sidebar"
+          title="Close"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
       </div>
 
       {/* New Chat */}
-      <button className="btn-new" onClick={() => newConv()} id="btn-new-chat">
+      <button className="btn-new" onClick={handleNewChat} id="btn-new-chat">
         <span style={{ fontSize: 18, lineHeight: 1 }}>＋</span> New Chat
       </button>
 
@@ -53,7 +74,7 @@ const Sidebar = ({ collapsed, onSettingsOpen }) => {
               <div
                 key={c.id}
                 className={`conv-item${c.id === activeId ? ' active' : ''}`}
-                onClick={() => selectConv(c.id)}
+                onClick={() => handleConvSelect(c.id)}
                 role="button"
                 tabIndex={0}
               >

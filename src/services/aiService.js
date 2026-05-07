@@ -80,11 +80,7 @@ export const askAI = async (prompt, selectedProvider, history = []) => {
   const messages = buildMessages(prompt, history);
 
   if (!GROQ_API_KEY) {
-    return {
-      text: `**Anita here!** I'm ready to chat, but I need my API key. Please add \`VITE_GROQ_API_KEY=your_key\` to your \`.env\` file in the root folder, and restart the server!`,
-      provider,
-      demo: true
-    };
+    throw new Error('brain_disconnect');
   }
 
   try {
@@ -108,7 +104,7 @@ export const askAI = async (prompt, selectedProvider, history = []) => {
     return { text, provider, demo: false };
 
   } catch (err) {
-    console.warn('[Groq] Error:', err.message);
-    return { text: `Sorry, there was an error connecting to my servers: ${err.message}`, provider, demo: true };
+    console.warn('[Anita] Brain connection issue:', err.message);
+    throw new Error('brain_disconnect');
   }
 };

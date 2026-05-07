@@ -60,17 +60,19 @@ const useChatStore = create(
         set(s => ({
           conversations: [{ id, title: 'New Chat', messages: [], ts: Date.now() }, ...s.conversations],
           activeId: id,
+          isStreaming: false,
         }));
         return id;
       },
 
-      selectConv: (id) => set({ activeId: id }),
+      selectConv: (id) => set({ activeId: id, isStreaming: false }),
 
       deleteConv: (id) => set(s => {
         const rest = s.conversations.filter(c => c.id !== id);
         return {
           conversations: rest,
           activeId: s.activeId === id ? (rest[0]?.id ?? null) : s.activeId,
+          isStreaming: s.activeId === id ? false : s.isStreaming,
         };
       }),
 
@@ -98,11 +100,11 @@ const useChatStore = create(
         ),
       })),
 
-      finaliseMsg: (convId, msgId, provider) => {
+      finaliseMsg: (convId, msgId, provider, remainingText = null) => {
         set(s => ({
           conversations: s.conversations.map(c =>
             c.id === convId
-              ? { ...c, messages: c.messages.map(m => m.id === msgId ? { ...m, provider } : m) }
+              ? { ...c, messages: c.messages.map(m => m.id === msgId ? { ...m, provider, remainingText } : m) }
               : c
           ),
         }));
