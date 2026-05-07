@@ -24,6 +24,4 @@ dist-ssr
 *.sw?
 
 # Environment files
-.env
-.env.*
-.env.local
+# .env is removed from ignore list as this is a private repo
