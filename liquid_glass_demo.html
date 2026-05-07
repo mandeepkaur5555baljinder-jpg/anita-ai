@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iOS 26 Liquid Glass UI</title>
+<style>
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.20);
+    --glass-border: rgba(255, 255, 255, 0.45);
+    --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    --glass-blur: blur(20px) saturate(1.8);
+    
+    --glass-selected: rgba(255, 255, 255, 0.45);
+    --dark-tab-bar: rgba(28, 41, 64, 0.72);
+    
+    --text-primary: rgba(0, 0, 0, 0.85);
+    --text-secondary: rgba(0, 0, 0, 0.50);
+    
+    --radius-panel: 24px;
+    --radius-pill: 100px;
+    
+    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  body {
+    background: linear-gradient(135deg, #a8c0d4, #c5d5e2);
+    background-attachment: fixed;
+    min-height: 100vh;
+    color: var(--text-primary);
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    overflow-x: hidden;
+  }
+
+  /* Decorative background blobs to show off transparency */
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(60px);
+    z-index: -1;
+    opacity: 0.6;
+    animation: float 10s ease-in-out infinite;
+  }
+  .blob-1 {
+    width: 300px; height: 300px;
+    background: #ffffff;
+    top: 10%; left: 10%;
+  }
+  .blob-2 {
+    width: 400px; height: 400px;
+    background: #8aa5c0;
+    bottom: 10%; right: 10%;
+    animation-delay: -5s;
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-40px) scale(1.05); }
+  }
+
+  /* --- Glass Utility Class --- */
+  .liquid-glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-highlight), 0 8px 32px rgba(0, 0, 0, 0.05);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+  }
+
+  /* --- 1. Floating Glass Navigation Bar --- */
+  .nav-bar {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    border-radius: var(--radius-pill);
+    width: max-content;
+    z-index: 10;
+  }
+
+  .nav-pill {
+    padding: 10px 24px;
+    border-radius: var(--radius-pill);
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .nav-pill:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .nav-pill.active {
+    background: var(--glass-selected);
+    color: var(--text-primary);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+
+  /* --- 2. Glass Card Panel --- */
+  .card-panel {
+    width: 100%;
+    max-width: 400px;
+    border-radius: var(--radius-panel);
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    transition: var(--transition);
+  }
+
+  .card-panel:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--glass-highlight), 0 15px 40px rgba(0, 0, 0, 0.08);
+  }
+
+  .card-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .card-header p {
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 12px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.25);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: var(--transition);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-highlight);
+  }
+
+  .btn:hover {
+    background: var(--glass-selected);
+    transform: scale(1.02);
+  }
+  
+  .btn.primary {
+    background: var(--dark-tab-bar);
+    color: white;
+    border-color: transparent;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  
+  .btn.primary:hover {
+    background: rgba(40, 55, 80, 0.85);
+  }
+
+  /* --- 3. Glass Input Field & CTA --- */
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .glass-input {
+    width: 100%;
+    padding: 16px 20px;
+    border-radius: 16px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    color: var(--text-primary);
+    font-size: 16px;
+    outline: none;
+    transition: var(--transition);
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);
+  }
+
+  .glass-input::placeholder {
+    color: var(--text-secondary);
+  }
+
+  .glass-input:focus {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.02), 0 0 0 4px rgba(255,255,255,0.3);
+  }
+
+  /* --- 4. Context Menu --- */
+  .context-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .context-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+  }
+
+  .context-menu {
+    position: absolute;
+    bottom: 75px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 20px;
+    overflow: hidden;
+    width: 200px;
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+    pointer-events: none;
+    transition: var(--transition);
+  }
+
+  .context-menu.active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  .menu-item {
+    padding: 14px 20px;
+    border: none;
+    background: transparent;
+    text-align: left;
+    font-size: 16px;
+    color: var(--text-primary);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .menu-item:last-child {
+    border-bottom: none;
+  }
+
+  .menu-item:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+</style>
+</head>
+<body>
+
+  <!-- Background Blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <!-- 1. Floating Navigation Bar -->
+  <nav class="liquid-glass nav-bar">
+    <button class="nav-pill active" onclick="setActive(this)">Home</button>
+    <button class="nav-pill" onclick="setActive(this)">Discover</button>
+    <button class="nav-pill" onclick="setActive(this)">Library</button>
+  </nav>
+
+  <!-- 2. Glass Card Panel & 3. Input Group -->
+  <div class="liquid-glass card-panel">
+    <div class="card-header">
+      <h2>Liquid Glass</h2>
+      <p>A beautiful manifestation of iOS 26 design principles, utilizing deep blurs, high specular highlights, and pure light transmission.</p>
+    </div>
+    
+    <div class="input-group">
+      <input type="email" class="glass-input" placeholder="Enter your email...">
+      <button class="btn primary">Subscribe Now</button>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn">Details</button>
+      <button class="btn">Dismiss</button>
+    </div>
+  </div>
+
+  <!-- 4. Context Menu -->
+  <div class="context-wrapper">
+    <button class="liquid-glass btn context-btn" onclick="toggleMenu()" id="menuBtn">⋮</button>
+    
+    <div class="liquid-glass context-menu" id="contextMenu">
+      <button class="menu-item">👍 Like</button>
+      <button class="menu-item">💬 Reply</button>
+      <button class="menu-item">↗️ Share</button>
+    </div>
+  </div>
+
+  <script>
+    // Navigation interaction
+    function setActive(element) {
+      document.querySelectorAll('.nav-pill').forEach(pill => {
+        pill.classList.remove('active');
+      });
+      element.classList.add('active');
+    }
+
+    // Context menu interaction
+    function toggleMenu() {
+      const menu = document.getElementById('contextMenu');
+      menu.classList.toggle('active');
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('contextMenu');
+      const btn = document.getElementById('menuBtn');
+      if (!menu.contains(e.target) && !btn.contains(e.target)) {
+        menu.classList.remove('active');
+      }
+    });
+  </script>
+</body>
+</html>

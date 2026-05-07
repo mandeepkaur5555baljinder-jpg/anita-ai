@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iOS 26 Liquid Glass Mockup</title>
+<style>
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.26);
+    --glass-border: rgba(255, 255, 255, 0.50);
+    --glass-highlight: inset 0 1.5px 0 rgba(255, 255, 255, 0.72), 0 8px 32px rgba(0, 0, 0, 0.10);
+    --glass-blur: blur(24px) saturate(1.6);
+    --glass-secondary: rgba(255, 255, 255, 0.38);
+    --glass-widget: rgba(255, 255, 255, 0.22);
+    
+    --primary-btn: rgba(28, 50, 78, 0.84);
+    
+    --text-main: rgba(0, 0, 0, 0.88);
+    --text-sub: rgba(0, 0, 0, 0.55);
+    
+    --spring-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --slide-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: linear-gradient(160deg, #b8cfe0 0%, #c9dae8 45%, #adc4d8 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  /* Decorative Background Orbs */
+  .orb { position: absolute; border-radius: 50%; filter: blur(70px); opacity: 0.6; z-index: -1; }
+  .orb-1 { width: 350px; height: 350px; background: #ffffff; top: 15%; left: 30%; animation: drift 12s ease-in-out infinite alternate; }
+  .orb-2 { width: 250px; height: 250px; background: #88a4ba; bottom: 10%; right: 25%; animation: drift 10s ease-in-out infinite alternate-reverse; }
+  @keyframes drift { 0% { transform: translateY(0); } 100% { transform: translateY(-40px); } }
+
+  /* Phone Frame */
+  .phone-frame {
+    width: 340px;
+    height: 720px;
+    background: rgba(255,255,255,0.05);
+    border: 8px solid #f0f4f8;
+    border-radius: 48px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.15), inset 0 0 0 2px rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Status Bar */
+  .status-bar {
+    height: 44px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    z-index: 100;
+  }
+  .status-icons { letter-spacing: 2px; font-size: 12px; }
+
+  /* Top Nav Pill */
+  .top-nav {
+    margin: 10px 20px;
+    position: relative;
+    display: flex;
+    background: var(--glass-widget);
+    border-radius: 100px;
+    padding: 4px;
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid rgba(255,255,255,0.3);
+    z-index: 100;
+  }
+  .nav-slider {
+    position: absolute;
+    top: 4px; left: 4px;
+    height: calc(100% - 8px);
+    width: calc(33.33% - 2.6px);
+    background: white;
+    border-radius: 100px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.45s var(--spring-ease);
+    z-index: 1;
+  }
+  .nav-btn {
+    flex: 1;
+    text-align: center;
+    padding: 8px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-sub);
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
+    transition: color 0.3s;
+  }
+  .nav-btn.active { color: #000; }
+
+  /* Main Viewport */
+  .viewport {
+    flex: 1;
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: hidden;
+  }
+  .pages-container {
+    display: flex;
+    width: 300%;
+    height: 100%;
+    transition: transform 0.45s var(--slide-ease);
+  }
+  .page {
+    width: 33.333%;
+    height: 100%;
+    padding: 10px 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 100px; /* space for dock */
+  }
+  .page::-webkit-scrollbar { display: none; }
+
+  /* Glass Base Utilities */
+  .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-highlight);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+  }
+  
+  .panel { border-radius: 28px; padding: 24px; margin-bottom: 16px; }
+  .widget { border-radius: 22px; background: var(--glass-widget); padding: 16px; }
+
+  /* Typography */
+  h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px; }
+  p { font-size: 15px; color: var(--text-sub); line-height: 1.4; margin-bottom: 20px; }
+
+  /* Inputs & Buttons */
+  .input-wrap { position: relative; margin-bottom: 16px; }
+  input {
+    width: 100%;
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.3);
+    color: var(--text-main);
+    font-size: 16px;
+    outline: none;
+    transition: all 0.3s var(--spring-ease);
+  }
+  input::placeholder { color: var(--text-sub); }
+  input:focus {
+    transform: scale(1.01);
+    background: rgba(255,255,255,0.5);
+    border-color: rgba(255,255,255,0.9);
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.4), inset 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  button {
+    width: 100%;
+    padding: 16px;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s var(--spring-ease), filter 0.2s;
+  }
+  button:active { transform: scale(0.96); filter: brightness(0.9); }
+  
+  .btn-primary { background: var(--primary-btn); color: white; margin-bottom: 12px; }
+  
+  .btn-row { display: flex; gap: 10px; margin-bottom: 16px; }
+  .btn-secondary {
+    background: var(--glass-secondary);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+  }
+
+  /* Widgets Grid */
+  .widget-grid { display: flex; gap: 12px; margin-bottom: 20px; }
+  .widget-card { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+  .widget-val { font-size: 22px; font-weight: 700; }
+  .widget-lbl { font-size: 12px; color: var(--text-sub); font-weight: 500; }
+
+  /* Context Menu */
+  .context-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--glass-secondary); border: 1px solid var(--glass-border);
+    font-size: 20px; margin: 0 auto;
+  }
+  .context-wrapper { position: relative; display: flex; justify-content: center; }
+  .context-menu {
+    position: absolute; bottom: 60px;
+    width: 220px; border-radius: 20px;
+    overflow: hidden;
+    opacity: 0; transform: scale(0.9) translateY(10px);
+    pointer-events: none;
+    transition: all 0.3s var(--spring-ease);
+    z-index: 50;
+  }
+  .context-menu.show { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
+  .menu-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 18px; width: 100%; border-radius: 0;
+    background: transparent; color: var(--text-main);
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    font-weight: 500;
+  }
+  .menu-item:last-child { border-bottom: none; }
+  .menu-item.red { color: #ff3b30; }
+  /* Ripple effect */
+  .menu-item { position: relative; overflow: hidden; }
+  .menu-item::after {
+    content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.1);
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .menu-item:active::after { opacity: 1; }
+
+  /* Lists (Discover & Library) */
+  .list-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.2);
+  }
+  .list-item:last-child { border-bottom: none; }
+  .list-icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .list-text { flex: 1; }
+  .list-title { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
+  .list-sub { font-size: 13px; color: var(--text-sub); }
+  .list-badge { background: rgba(0,0,0,0.06); padding: 4px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; color: var(--text-main); }
+
+  /* Grid 2x2 */
+  .grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .grid-card { padding: 20px; display: flex; flex-direction: column; gap: 10px; border-radius: 24px; align-items: flex-start; }
+  .grid-icon { font-size: 24px; }
+
+  /* Bottom Dock */
+  .dock-wrap {
+    position: absolute;
+    bottom: 20px; left: 0; width: 100%;
+    display: flex; justify-content: center;
+    z-index: 100;
+  }
+  .dock {
+    display: flex;
+    padding: 10px;
+    border-radius: 32px;
+    gap: 8px;
+  }
+  .dock-icon {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; cursor: pointer;
+    transition: transform 0.4s var(--spring-ease), background 0.3s;
+    background: transparent;
+  }
+  .dock-icon.active { background: rgba(255,255,255,0.4); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+  .dock-icon:active { transform: scale(0.82); }
+
+</style>
+</head>
+<body>
+
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="phone-frame">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span id="time">9:41</span>
+      <span class="status-icons">📶 🔋</span>
+    </div>
+
+    <!-- Top Nav Pill -->
+    <div class="top-nav">
+      <div class="nav-slider" id="navSlider"></div>
+      <div class="nav-btn active" onclick="switchTab(0)">Home</div>
+      <div class="nav-btn" onclick="switchTab(1)">Discover</div>
+      <div class="nav-btn" onclick="switchTab(2)">Library</div>
+    </div>
+
+    <!-- Viewport & Pages -->
+    <div class="viewport">
+      <div class="pages-container" id="pagesContainer">
+        
+        <!-- Page 1: Home -->
+        <div class="page">
+          <div class="glass panel">
+            <h1>Welcome Back</h1>
+            <p>Experience the depth of iOS 26 liquid glass styling natively in your browser.</p>
+            
+            <div class="input-wrap">
+              <input type="email" placeholder="Enter your email">
+            </div>
+            
+            <button class="btn-primary">Subscribe Now</button>
+            
+            <div class="btn-row">
+              <button class="btn-secondary">Details</button>
+              <button class="btn-secondary">Share</button>
+            </div>
+            
+            <div class="widget-grid">
+              <div class="glass widget widget-card">
+                <span class="widget-icon">☀️</span>
+                <span class="widget-val">72°</span>
+                <span class="widget-lbl">Sunny</span>
+              </div>
+              <div class="glass widget widget-card">
+                <span class="widget-icon">👟</span>
+                <span class="widget-val">8,432</span>
+                <span class="widget-lbl">Steps</span>
+              </div>
+            </div>
+
+            <div class="context-wrapper">
+              <div class="context-btn glass" onclick="toggleMenu(event)" id="ctxBtn">⋮</div>
+              <div class="glass context-menu" id="ctxMenu">
+                <button class="menu-item">Like <span>👍</span></button>
+                <button class="menu-item">Reply <span>💬</span></button>
+                <button class="menu-item">Share <span>↗️</span></button>
+                <button class="menu-item red">Delete <span>🗑️</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Page 2: Discover -->
+        <div class="page">
+          <div class="glass panel">
+            <h1>Discover</h1>
+            <p>Find new content tailored to you.</p>
+            <div class="list">
+              <div class="list-item">
+                <div class="list-icon">🎨</div>
+                <div class="list-text">
+                  <div class="list-title">Design System</div>
+                  <div class="list-sub">Updated 2h ago</div>
+                </div>
+                <div class="list-badge">New</div>
+              </div>
+              <div class="list-item">
+                <div class="list-icon">🚀</div>
+                <div class="list-text">
+                  <div class="list-title">Animations</div>
+                  <div class="list-sub">Spring physics</div>
+                </div>
+              </div>
+              <div class="list-item">
+                <div class="list-icon">✨</div>
+                <div class="list-text">
+                  <div class="list-title">Glass Filters</div>
+                  <div class="list-sub">Blur & Saturate</div>
+                </div>
+              </div>
+              <div class="list-item">
+                <div class="list-icon">📱</div>
+                <div class="list-text">
+                  <div class="list-title">Layouts</div>
+                  <div class="list-sub">Mobile first</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Page 3: Library -->
+        <div class="page">
+          <div class="grid-2x2">
+            <div class="glass widget grid-card">
+              <span class="grid-icon">📁</span>
+              <span class="list-title">Files</span>
+              <span class="list-sub">124 items</span>
+            </div>
+            <div class="glass widget grid-card">
+              <span class="grid-icon">🖼️</span>
+              <span class="list-title">Photos</span>
+              <span class="list-sub">2,841 items</span>
+            </div>
+            <div class="glass widget grid-card">
+              <span class="grid-icon">🎵</span>
+              <span class="list-title">Music</span>
+              <span class="list-sub">Playlists</span>
+            </div>
+            <div class="glass widget grid-card">
+              <span class="grid-icon">⭐</span>
+              <span class="list-title">Favorites</span>
+              <span class="list-sub">12 items</span>
+            </div>
+          </div>
+
+          <div class="glass panel" style="padding: 16px;">
+            <h2 style="font-size: 18px; margin-bottom: 10px; margin-left: 8px;">Recent</h2>
+            <div class="list-item" style="border: none; padding-bottom: 0;">
+              <div class="list-icon" style="border-radius: 50%;">📄</div>
+              <div class="list-text">
+                <div class="list-title">Project Proposal.pdf</div>
+                <div class="list-sub">Just now</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Bottom Dock -->
+    <div class="dock-wrap">
+      <div class="glass dock">
+        <div class="dock-icon active" onclick="switchTab(0)">🏠</div>
+        <div class="dock-icon" onclick="switchTab(1)">🔍</div>
+        <div class="dock-icon" onclick="switchTab(2)">📚</div>
+        <div class="dock-icon" onclick="bounceIcon(this)">⚙️</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Set time
+    const timeEl = document.getElementById('time');
+    const updateTime = () => {
+      const now = new Date();
+      timeEl.textContent = now.getHours() + ':' + now.getMinutes().toString().padStart(2, '0');
+    };
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    // Tab Switching Logic
+    const slider = document.getElementById('navSlider');
+    const container = document.getElementById('pagesContainer');
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const dockIcons = document.querySelectorAll('.dock-icon');
+    let currentTab = 0;
+
+    function switchTab(index) {
+      if(index > 2) return; // Ignore settings icon
+      currentTab = index;
+      
+      // Update Top Nav Slider
+      slider.style.transform = `translateX(${index * 100}%)`;
+      navBtns.forEach((btn, i) => btn.classList.toggle('active', i === index));
+      
+      // Slide Pages
+      container.style.transform = `translateX(-${index * 33.333}%)`;
+      
+      // Update Dock Icons
+      dockIcons.forEach((icon, i) => {
+        if(i < 3) icon.classList.toggle('active', i === index);
+      });
+    }
+
+    // Context Menu Logic
+    function toggleMenu(e) {
+      e.stopPropagation();
+      document.getElementById('ctxMenu').classList.toggle('show');
+    }
+    document.addEventListener('click', () => {
+      document.getElementById('ctxMenu').classList.remove('show');
+    });
+
+    // Bounce effect for non-tab icons (Settings)
+    function bounceIcon(el) {
+      el.style.transform = 'scale(0.82)';
+      setTimeout(() => { el.style.transform = ''; }, 150);
+    }
+  </script>
+</body>
+</html>
